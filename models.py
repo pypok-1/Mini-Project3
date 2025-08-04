@@ -1,8 +1,10 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
 from database import Base
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy.orm import relationship
+from datetime import datetime
 
 
-# models.py
 class User(Base):
     __tablename__ = "users"
 
@@ -11,6 +13,17 @@ class User(Base):
     password = Column(String)
     email = Column(String, unique=True)
 
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    ad_id = Column(Integer, ForeignKey("ads.id", ondelete="CASCADE"), index=True)
+    sender_username = Column(String, index=True)
+    text = Column(Text)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    ad = relationship("Ad", back_populates="messages")
 
 class Ad(Base):
     __tablename__ = "ads"
@@ -22,5 +35,7 @@ class Ad(Base):
     category = Column(String)
     photo_filename = Column(String)
     owner_username = Column(String)
+    messages = relationship("Message", back_populates="ad", cascade="delete")
+
 
 owner_username = Column(String, ForeignKey("users.username"))
