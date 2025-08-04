@@ -10,7 +10,7 @@ REcicle - it's a website that helps people and businesses sell things. It lets p
 - 🌿  Uploading product images (stored locally)
 - 🌿  Personal user dashboard
 - 🌿  Real-time chat between users and volunteers via WebSocket
-
+[![3e0d338bb22ff3925961852b739130b2.jpg](https://i.postimg.cc/ydLZM4b4/3e0d338bb22ff3925961852b739130b2.jpg)](https://postimg.cc/hz7vmwnp)
 ## Technology Stack
 
 ### Backend
