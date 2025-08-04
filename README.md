@@ -3,7 +3,7 @@ REcicle - it's a website that helps people and businesses sell things. It lets p
 
 ##  Functionality
 
-- 🌿 User registration and authentication (OAuth2)
+- 🌿[x] User registration and authentication (OAuth2)
 - 🌿  Adding, viewing, and managing product ads
 - 🌿  Uploading product images (stored locally)
 - 🌿  Personal user dashboard
