@@ -15,12 +15,11 @@ REcicle - it's a website that helps people and businesses sell things. It lets p
 
 ### Backend
 - **Framework**: FastAPI (Python 3.11+)
-- **Database**: SQLAlchemy (ORM)
-- **Authentication**: OAuth2 with JWT
+- **Database**: SQLAlchemy
+- **Authentication**: OAuth2 
 - **Real-time**: WebSockets
 
 ### Frontend
 - Core: HTML5, CSS3, JavaScript
 - Responsive design
-
-[![REcicle Preview](https://i.postimg.cc/4yXFNC14/image-1.jpg)](https://postimg.cc/XGDgQzht)
+[![2025-08-04-140703504.png](https://i.postimg.cc/Bnf0G8Ds/2025-08-04-140703504.png)](https://postimg.cc/kBsZQgfh)
