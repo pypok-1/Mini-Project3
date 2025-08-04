@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+      color: #333;
+    }
+    header {
+          background-color: #B2D7BA;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 30px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    #chat-box {
+      border: 1px solid #ccc;
+      height: 250px;
+      overflow-y: auto;
+      padding: 10px;
+      background: white;
+      margin-bottom: 10px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    form {
+      display: flex;
+      gap: 8px;
+    }
+    input[type="text"] {
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+    #usernameInput {
+      width: 150px;
+    }
+    #messageInput {
+      flex-grow: 1;
+    }
+    button {
+      background-color: #D0E7D5;
+      border: none;
+      color: #284D30;
+      padding: 8px 15px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+      font-weight: bold;
+    }
+    button:hover {
+      background-color: #478A56;
+    }
+  </style>
+</head>
+<body>
+ <header>Chat</header>
+  <div id="chat-box"></div>
+  <form id="chat-form">
+    <input id="usernameInput" type="text" placeholder="Your name" required />
+    <input id="messageInput" type="text" placeholder="The message..." required autocomplete="off" />
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    const ws = new WebSocket("ws://localhost:8000/ws/chat");
+    const chatBox = document.getElementById("chat-box");
+    const form = document.getElementById("chat-form");
+    const usernameInput = document.getElementById("usernameInput");
+    const messageInput = document.getElementById("messageInput");
+
+    ws.onmessage = event => {
+      const div = document.createElement("div");
+      div.textContent = event.data;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    };
+
+    form.onsubmit = e => {
+      e.preventDefault();
+      const username = usernameInput.value.trim() || "Анонім";
+      const message = messageInput.value.trim();
+      if (!message) return;
+      ws.send(JSON.stringify({ username, message }));
+      messageInput.value = "";
+    };
+  </script>
+</body>
+</html>
