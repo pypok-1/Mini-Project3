@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Submit Ad</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 40px 20px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        h1 {
+            color: #2e7d32;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        form {
+            background: white;
+            max-width: 400px;
+            padding: 25px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        input[type="file"] {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 15px;
+            border: 2px solid #b5e8a1;
+            border-radius: 5px;
+            font-size: 1rem;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus,
+        input[type="file"]:focus {
+            border-color: #2e7d32;
+            outline: none;
+        }
+
+        textarea {
+            min-height: 80px;
+        }
+
+        button {
+            background-color: #2e7d32;
+            color: white;
+            font-weight: bold;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1.1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #1b5e20;
+        }
+
+        .preview-box {
+            max-width: 300px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .preview-box img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        p {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        p a {
+            color: #2e7d32;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        p a:hover {
+            text-decoration: underline;
+            color: #1b5e20;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <form action="/ads" method="post" enctype="multipart/form-data">
+        <h1>Submit Ad</h1>
+        <input type="text" name="title" placeholder="Title" required />
+        <textarea name="description" placeholder="Description" required></textarea>
+        <input type="number" step="0.01" name="price" placeholder="Price" required />
+        <input type="text" name="category" placeholder="Category" required />
+        <input type="file" name="photo" accept=".jpg,.jpeg,.png" onchange="previewImage(event)" required />
+        <button type="submit">Submit</button>
+        <p><a href="/">Home</a></p>
+    </form>
+
+    <div class="preview-box">
+        <h2>Photo Preview</h2>
+        <img id="imagePreview" src="#" alt="Selected Photo" style="display: none;" />
+    </div>
+</div>
+<!-- не моё просто сделано для красаты -->
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById("imagePreview");
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = "block";
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+</body>
+</html>

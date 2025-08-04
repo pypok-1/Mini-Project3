@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        header {
+            background-color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 30px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header img {
+            height: 50px;
+            cursor: pointer;
+        }
+
+        .left-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+
+        .user-info a:hover {
+            text-decoration: underline;
+            color: #1b5e20;
+        }
+
+        .user_text {
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        button {
+            padding: 6px 12px;
+            margin: 10px 0;
+            border: none;
+            background-color: #d32f2f;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+             text-align: center;
+
+        }
+
+        button:hover {
+            background-color: #b71c1c;
+
+        }
+
+        ul {
+            padding-left: 20px;
+             text-align: center;
+
+        }
+
+        li {
+            margin-bottom: 10px;
+             text-align: center;
+        }
+
+        a {
+            color: #83AA88;
+            text-decoration: none;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+        h2{
+
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="left-header">
+        <a href="/"><img src="https://i.postimg.cc/4yXFNC14/image-1.jpg" alt="Logo"/></a>
+    </div>
+    {% if user %}
+    <div class="user-info">
+        <form action="/logout" method="get">
+            <button type="submit">Log Out</button>
+        </form>
+        <span class="user_text">{{ user }}</span>
+        <a href="/profile">
+            <img src="https://i.postimg.cc/nrWC2xr0/image.png" alt="Profile"/>
+        </a>
+    </div>
+    {% else %}
+    <div class="header-buttons">
+        <a href="/login" class="login-link">Login</a>
+        <a href="/register" class="register-btn">Register</a>
+    </div>
+    {% endif %}
+</header>
+
+
+<h2>My Ads</h2>
+{% if ads %}
+<ul>
+    {% for ad in ads %}
+    <li>
+        <strong>{{ ad.title }}</strong> — {{ ad.category }}<br>
+        <form action="/delete_ad/{{ ad.id }}" method="post" style="display:inline;">
+            <button type="submit"> Delete</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>You haven't seen any ads yet.</p>
+{% endif %}
+
+<a href="/">⬅ Back to home</a>
+</body>
+</html>

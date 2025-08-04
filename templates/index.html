@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Index</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f5f5f5;
+          margin: 0;
+          padding: 0;
+          color: #333;
+        }
+
+        header {
+          background-color: white;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 30px;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        header img {
+          height: 50px;
+        }
+
+        .left-header {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+        }
+
+        .ads {
+          margin-left: 5px;
+          padding: 0.4rem 2rem;
+          background-color: #DDF0E2;
+          color: #2e7d32;
+          text-decoration: none;
+          border-radius: 5px;
+          font-weight: bold;
+          transition: all 0.3s ease;
+          border: 5px solid #ADDBBA;
+        }
+
+        .ads:hover {
+          background-color: white;
+          color: #2e7d32;
+          border-color: #2e7d32;
+          border: 3px solid #ADDBBA;
+        }
+
+        .login-link {
+          color: #2e7d32;
+          text-decoration: underline;
+          font-weight: bold;
+          padding: 0.4rem 1rem;
+          background: none;
+          border: none;
+        }
+
+        .login-link:hover {
+          color: #1b5e20;
+        }
+
+        .register-btn {
+          margin-left: 5px;
+          padding: 0.4rem 2rem;
+          background-color: #b5e8a1;
+          color: #2e7d32;
+          text-decoration: none;
+          border-radius: 5px;
+          font-weight: bold;
+          transition: all 0.3s ease;
+          border: 2px solid #b5e8a1;
+        }
+
+        .register-btn:hover {
+          background-color: white;
+          color: #2e7d32;
+          border-color: #2e7d32;
+        }
+
+        .user-info {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 0.95rem;
+        }
+
+        .user-info a {
+          color: #2e7d32;
+          text-decoration: none;
+          font-weight: bold;
+        }
+
+        .user-info a:hover {
+          text-decoration: underline;
+          color: #1b5e20;
+        }
+
+        .user_text {
+          font-weight: bold;
+          color: #2e7d32;
+        }
+
+    </style>
+</head>
+<body>
+<header>
+    <div class="left-header">
+        <a href="/"><img src="https://i.postimg.cc/4yXFNC14/image-1.jpg" alt="Logo"/></a>
+    </div>
+
+    {% if user %}
+    <div class="user-info">
+        <a href="/ads" class="ads">Submit an ad</a>
+
+        <span class="user_text">{{ user }}</span>
+        <a href="/profile">
+            <img src="https://i.postimg.cc/nrWC2xr0/image.png" alt="login"/>
+        </a>
+    </div>
+    {% else %}
+    <div class="header-buttons">
+        <a href="/login" class="login-link">Login</a>
+        <a href="/register" class="register-btn">Register</a>
+    </div>
+    {% endif %}
+
+</header>
+{% for ad in ads %}
+<div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+    <h3>{{ ad.title }}</h3>
+    <p><strong>Category:</strong> {{ ad.category }}</p>
+    <p><strong>Description:</strong> {{ ad.description }}</p>
+    <p><strong>Price:</strong> ${{ ad.price }}</p>
+    <p><strong>Posted by:</strong> {{ ad.owner_username }}</p>
+    {% if ad.photo_filename %}
+    <img src="/uploads/{{ ad.photo_filename }}" width="200">
+    {% endif %}
+</div>
+{% endfor %}
+</body>
+</html>
