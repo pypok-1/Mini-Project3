@@ -16,9 +16,8 @@ REcicle - it's a website that helps people and businesses sell things. It lets p
 - База даних: SQLalchemy
 - WebSocket (For live chat)
 - user authorisation: OAuth2
-## Ads.
+## Ads
 -Users can add products they want to sell
-
 -The form contains:
 -Title
 -Description
