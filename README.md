@@ -23,13 +23,13 @@ REcicle - it's a website that helps people and businesses sell things. It lets p
 - Core: HTML5, CSS3, JavaScript
 - Responsive design
 
-##Index
-[![2025-08-04-140608.png](https://i.postimg.cc/HktsZ0NF/2025-08-04-140608.png)](https://postimg.cc/LJnphP2V)
+## Index
+- [![2025-08-04-140608.png](https://i.postimg.cc/HktsZ0NF/2025-08-04-140608.png)](https://postimg.cc/LJnphP2V)
 
-##Login
-[![2025-08-04-140703504.png](https://i.postimg.cc/Bnf0G8Ds/2025-08-04-140703504.png)](https://postimg.cc/kBsZQgfh)
+## Login
+- [![2025-08-04-140703504.png](https://i.postimg.cc/Bnf0G8Ds/2025-08-04-140703504.png)](https://postimg.cc/kBsZQgfh)
 
-##Regiter
-[![2025-08-04-140630.png](https://i.postimg.cc/k42Jg05d/2025-08-04-140630.png)](https://postimg.cc/bDjc6Fb6)
+## Regiter
+- [![2025-08-04-140630.png](https://i.postimg.cc/k42Jg05d/2025-08-04-140630.png)](https://postimg.cc/bDjc6Fb6)
 
 
