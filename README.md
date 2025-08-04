@@ -26,3 +26,5 @@ REcicle - it's a website that helps people and businesses sell things. It lets p
 - Photo.
 ## Notes:
 -- Uploaded photos are stored locally on the server under /static/uploads/.
+## 🎥 Preview
+![Preview](./preview.gif)
