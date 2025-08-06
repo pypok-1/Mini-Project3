@@ -1,30 +1,31 @@
-import shutil
-import os
 from typing import List
-from fastapi import FastAPI, Form, Request, Depends, HTTPException, UploadFile, File, status, WebSocket, \
-    WebSocketDisconnect
+from fastapi import FastAPI, Form, Request, Depends, HTTPException, UploadFile, File, status, WebSocket, WebSocketDisconnect
 from fastapi.responses import RedirectResponse, HTMLResponse
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from pydantic import BaseModel, Field, validator, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, validator
 from fastapi.staticfiles import StaticFiles
-from database import SessionLocal, engine
-from models import User, Ad, Base
 from datetime import datetime
 import json
+import shutil
+import os
 
-app = FastAPI(title="Mini Project with Swagger and ReDoc Docs")
+from database import SessionLocal, engine
+from models import User, Ad, Base
+
+app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 Base.metadata.create_all(bind=engine)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 active_connections: List[WebSocket] = []
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-# --- this is useful ---
 
 def get_db():
     db = SessionLocal()
@@ -46,65 +47,21 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-# --- websocket chat ---
-@app.websocket("/ws/chat")
-async def websocket_chat(websocket: WebSocket):
-    await websocket.accept()
-    active_connections.append(websocket)
-    try:
-        while True:
-            data = await websocket.receive_text()
-            msg_data = json.loads(data)
-            username = msg_data.get("username", "Анонім")
-            message = msg_data.get("message", "")
-            now = datetime.now().strftime("%H:%M")
-
-            formatted_message = f"{now} {username}: {message}"
-
-            for connection in active_connections:
-                await connection.send_text(formatted_message)
-    except WebSocketDisconnect:
-        active_connections.remove(websocket)
-
-
-@app.get("/chat", response_class=HTMLResponse, summary="Chat page")
-async def chat_page(request: Request):
-    return templates.TemplateResponse("chat.html", {"request": request})
-
-
 # --- index ---
-
-@app.get("/", response_class=HTMLResponse, summary="Home page with ads")
+@app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request)
     ads = db.query(Ad).all()
     return templates.TemplateResponse("index.html", {"request": request, "user": user, "ads": ads})
 
 
-# --- auth and User ---
-@app.get("/register", response_class=HTMLResponse, summary="Registration form")
-async def register_form(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
-
-
-@app.post("/register", summary="Register new user")
-async def register(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.username == username).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="User already exists")
-    hashed = get_password_hash(password)
-    user = User(username=username, password=hashed)
-    db.add(user)
-    db.commit()
-    return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
-
-
-@app.get("/login", response_class=HTMLResponse, summary="Login form")
+# -- auth and User ---
+@app.get("/login", response_class=HTMLResponse)
 async def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
 
-@app.post("/login", summary="User login")
+@app.post("/login")
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.password):
@@ -114,30 +71,70 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     return response
 
 
-@app.get("/logout", summary="Logout user")
+@app.get("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
     response.delete_cookie("user")
     return response
 
 
-# --- ads ---
+@app.get("/register", response_class=HTMLResponse)
+async def register_form(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
 
+
+@app.post("/register")
+async def register(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+    if db.query(User).filter(User.username == username).first():
+        raise HTTPException(status_code=400, detail="User already exists")
+    hashed_password = get_password_hash(password)
+    user = User(username=username, password=hashed_password)
+    db.add(user)
+    db.commit()
+    return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+
+# --chat--
+@app.websocket("/ws/chat")
+async def websocket_chat(websocket: WebSocket):
+    await websocket.accept()
+    active_connections.append(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            msg = json.loads(data)
+            username = msg.get("username", "Anonymous")
+            message = msg.get("message", "")
+            now = datetime.now().strftime("%H:%M")
+            formatted = f"{now} {username}: {message}"
+            for conn in active_connections:
+                await conn.send_text(formatted)
+    except WebSocketDisconnect:
+        active_connections.remove(websocket)
+
+
+@app.get("/chat", response_class=HTMLResponse)
+async def chat_page(request: Request):
+    return templates.TemplateResponse("chat.html", {"request": request})
+
+
+# --- ads ---
 class AdCreate(BaseModel):
-    title: str = Field(..., min_length=3, max_length=100, description="Ad title")
-    description: str = Field(..., min_length=10, max_length=1000, description="Ad description")
-    price: float = Field(..., gt=0, description="Price must be > 0")
-    category: str = Field(..., min_length=2, max_length=50, description="Category")
+    title: str = Field(..., min_length=3, max_length=100)
+    description: str = Field(..., min_length=10, max_length=1000)
+    price: float = Field(..., gt=0)
+    category: str = Field(..., min_length=2, max_length=50)
 
     @field_validator("title")
     @classmethod
     def no_special_chars(cls, v):
-        if any(not (c.isalnum() or c.isspace()) for c in v):
+        allowed_chars = set(".,-")
+        if any(not (c.isalnum() or c.isspace() or c in allowed_chars) for c in v):
             raise ValueError("Title must not contain special characters")
         return v
 
 
-@app.get("/ads", response_class=HTMLResponse, summary="Ad creation form")
+@app.get("/ads", response_class=HTMLResponse)
 async def get_ad_form(request: Request):
     user = get_current_user(request)
     if not user:
@@ -145,7 +142,7 @@ async def get_ad_form(request: Request):
     return templates.TemplateResponse("ads.html", {"request": request, "user": user})
 
 
-@app.post("/ads", summary="Create new ad")
+@app.post("/ads")
 async def submit_ad(
         request: Request,
         title: str = Form(...),
@@ -153,7 +150,7 @@ async def submit_ad(
         price: float = Form(...),
         category: str = Form(...),
         photo: UploadFile = File(...),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
 ):
     user = get_current_user(request)
     if not user:
@@ -175,14 +172,15 @@ async def submit_ad(
         price=ad_data.price,
         category=ad_data.category,
         photo_filename=photo.filename,
-        owner_username=user
+        owner_username=user,
     )
     db.add(new_ad)
     db.commit()
+
     return RedirectResponse(url="/ads", status_code=status.HTTP_302_FOUND)
 
 
-@app.post("/delete_ad/{ad_id}", summary="Delete ad by owner")
+@app.post("/delete_ad/{ad_id}")
 async def delete_ad(ad_id: int, request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request)
     if not user:
@@ -196,8 +194,7 @@ async def delete_ad(ad_id: int, request: Request, db: Session = Depends(get_db))
 
 
 # --- profile ---
-
-@app.get("/profile", response_class=HTMLResponse, summary="User profile with their ads")
+@app.get("/profile", response_class=HTMLResponse)
 async def profile(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request)
     if not user:
