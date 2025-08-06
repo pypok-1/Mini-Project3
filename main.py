@@ -1,13 +1,14 @@
 import shutil
 import os
 from typing import List
-from fastapi import FastAPI, Form, Request, Depends, HTTPException, UploadFile, File, status, WebSocket
+from fastapi import FastAPI, Form, Request, Depends, HTTPException, UploadFile, File, status, WebSocket, \
+    WebSocketDisconnect
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from pydantic import BaseModel, Field, validator, ValidationError
+from pydantic import BaseModel, Field, validator, ValidationError, field_validator
 from fastapi.staticfiles import StaticFiles
 from database import SessionLocal, engine
 from models import User, Ad, Base
@@ -16,7 +17,7 @@ import json
 
 app = FastAPI(title="Mini Project with Swagger and ReDoc Docs")
 templates = Jinja2Templates(directory="templates")
-app.mount("/js", StaticFiles(directory="js"), name="js")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 Base.metadata.create_all(bind=engine)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -62,7 +63,7 @@ async def websocket_chat(websocket: WebSocket):
 
             for connection in active_connections:
                 await connection.send_text(formatted_message)
-    except:
+    except WebSocketDisconnect:
         active_connections.remove(websocket)
 
 
@@ -128,7 +129,8 @@ class AdCreate(BaseModel):
     price: float = Field(..., gt=0, description="Price must be > 0")
     category: str = Field(..., min_length=2, max_length=50, description="Category")
 
-    @validator("title")
+    @field_validator("title")
+    @classmethod
     def no_special_chars(cls, v):
         if any(not (c.isalnum() or c.isspace()) for c in v):
             raise ValueError("Title must not contain special characters")
