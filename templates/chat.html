@@ -87,7 +87,7 @@
 
     form.onsubmit = e => {
       e.preventDefault();
-      const username = usernameInput.value.trim() || "Анонім";
+      const username = usernameInput.value.trim() || "Anonymous";
       const message = messageInput.value.trim();
       if (!message) return;
       ws.send(JSON.stringify({ username, message }));
