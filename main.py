@@ -5,15 +5,20 @@ from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from pydantic import BaseModel, Field, ValidationError, field_validator, validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 from fastapi.staticfiles import StaticFiles
-from datetime import datetime
+from datetime import datetime, timedelta
+import jwt
 import json
 import shutil
 import os
 
 from database import SessionLocal, engine
 from models import User, Ad, Base
+# ---CONFIG---
+SECRET_KEY = "super_secret_key_123"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -27,6 +32,25 @@ active_connections: List[WebSocket] = []
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
+#---JWT---
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def decode_access_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+#---DB---
 def get_db():
     db = SessionLocal()
     try:
@@ -35,10 +59,7 @@ def get_db():
         db.close()
 
 
-def get_current_user(request: Request):
-    return request.cookies.get("user")
-
-
+#---helpers---
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -47,7 +68,15 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-# --- index ---
+def get_current_user(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        return None
+    payload = decode_access_token(token)
+    return payload.get("sub")
+
+
+# ---INDEX ---
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request)
@@ -55,7 +84,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("index.html", {"request": request, "user": user, "ads": ads})
 
 
-# -- auth and User ---
+# ---AUTH ---
 @app.get("/login", response_class=HTMLResponse)
 async def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
@@ -66,15 +95,17 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    access_token = create_access_token({"sub": user.username})
     response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-    response.set_cookie(key="user", value=user.username, httponly=True)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
     return response
 
 
 @app.get("/logout")
 async def logout():
     response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-    response.delete_cookie("user")
+    response.delete_cookie("access_token")
     return response
 
 
@@ -91,10 +122,15 @@ async def register(username: str = Form(...), password: str = Form(...), db: Ses
     user = User(username=username, password=hashed_password)
     db.add(user)
     db.commit()
-    return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+
+    # Автовход после регистрации
+    access_token = create_access_token({"sub": user.username})
+    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    return response
 
 
-# --chat--
+#-- CHAT --
 @app.websocket("/ws/chat")
 async def websocket_chat(websocket: WebSocket):
     await websocket.accept()
@@ -118,7 +154,7 @@ async def chat_page(request: Request):
     return templates.TemplateResponse("chat.html", {"request": request})
 
 
-# --- ads ---
+#--- ADS  ---
 class AdCreate(BaseModel):
     title: str = Field(..., min_length=3, max_length=100)
     description: str = Field(..., min_length=10, max_length=1000)
@@ -144,13 +180,13 @@ async def get_ad_form(request: Request):
 
 @app.post("/ads")
 async def submit_ad(
-        request: Request,
-        title: str = Form(...),
-        description: str = Form(...),
-        price: float = Form(...),
-        category: str = Form(...),
-        photo: UploadFile = File(...),
-        db: Session = Depends(get_db),
+    request: Request,
+    title: str = Form(...),
+    description: str = Form(...),
+    price: float = Form(...),
+    category: str = Form(...),
+    photo: UploadFile = File(...),
+    db: Session = Depends(get_db),
 ):
     user = get_current_user(request)
     if not user:
@@ -193,7 +229,7 @@ async def delete_ad(ad_id: int, request: Request, db: Session = Depends(get_db))
     return RedirectResponse(url="/profile", status_code=status.HTTP_302_FOUND)
 
 
-# --- profile ---
+#--- PROFILE  ---
 @app.get("/profile", response_class=HTMLResponse)
 async def profile(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(request)
@@ -203,8 +239,7 @@ async def profile(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse("prof.html", {"request": request, "user": user, "ads": user_ads})
 
 
-# --- here's the exception handler--
-
+#--- Exception---
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return templates.TemplateResponse("error.html", {"request": request, "message": exc.detail},
