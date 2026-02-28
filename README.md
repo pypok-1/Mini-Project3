@@ -22,3 +22,14 @@ REcicle - it's a website that helps people and businesses sell things. It lets p
 ### Frontend
 - Core: HTML5, CSS3, JavaScript
 - Responsive design
+### Developers
+
+<div>
+  <a href="https://github.com/TimeosPPS">
+    <img src="https://github.com/AndriyPy" width="100">
+  </a>
+
+  <a href="https://github.com/pypok-1">
+    <img src="https://avatars.githubusercontent.com/u/187442340?v=4" width="100">
+  </a>
+</div>
