@@ -25,7 +25,7 @@ REcicle - it's a website that helps people and businesses sell things. It lets p
 ### Developers
 
 <div>
-  <a href="https://github.com/TimeosPPS">
+  <a href="https://github.com/AndriyPy">
     <img src="https://github.com/AndriyPy" width="100">
   </a>
 
