@@ -26,7 +26,7 @@ REcicle - it's a website that helps people and businesses sell things. It lets p
 
 <div>
   <a href="https://github.com/AndriyPy">
-    <img src="https://github.com/AndriyPy" width="100">
+    <img src="https://avatars.githubusercontent.com/u/187444054?v=4" width="100">
   </a>
 
   <a href="https://github.com/pypok-1">
